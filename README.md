@@ -14,3 +14,5 @@ To provide Information to the ESO STC on how science cases related to the stella
 
 ### Useful links
 - Open cluster census (Hunt+23) - https://cdsarc.cds.unistra.fr/viz-bin/cat/J/A+A/673/A114
+- Erik Mamajeks Stellar Magnitudes table - https://www.pas.rochester.edu/~emamajek/EEM_dwarf_UBVIJHK_colors_Teff.txt
+- 
