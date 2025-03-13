@@ -4,7 +4,8 @@ from astropy.io import fits, ascii
 from astropy.table import Table, Column
 import numpy as np
 
-
+# The following FITS files are large and need to be downloaded from google drive:
+# https://drive.google.com/drive/folders/1wdbalWkfhOVMZ_wGg__RWaWQdhql0MbO?usp=sharing
 CATALOGUE_FILE = Path(__file__).parent / "J_A+A_673_A114_clusters.dat.gz.fits"
 MEMBERS_FILE = Path(__file__).parent / "reduced_J_A+A_673_A114_members.dat.fits"
 README_FILE = Path(__file__).parent / "Hunt23_ReadMe.txt"
@@ -216,3 +217,4 @@ def add_circles_to_grid(grid_size, x_positions, y_positions, radius):
 for i in np.linspace(1, 1766, 20):
     cl = Cluster(int(i))
     print(int(i), cl.n_guide_stars, cl.calculate_fraction_covered_by_guide_stars())
+    cl.plot()
