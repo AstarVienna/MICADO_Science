@@ -1,0 +1,99 @@
+   Bytes  Formt Units  Label        Explanations
+ -------  ----- ------ ----------   --------------------------------------------
+   1- 20  A20   ---      Name       Main accepted cluster name (1)
+  22- 25  I4    ---      ID         ? Internal cluster ID
+  27-272  A246  ---      AllNames   Comma separated list of all crossmatched
+                                     cluster names
+     274  A1    ---      Type       [omg] Type of object (o: open cluster,
+                                     m: moving group, g: globular cluster)
+ 276-286  F11.8 ---      CST        [3/99] Astrometric SNR
+                                     (cluster significance test) (G1)
+ 288-293  I6    ---      N          [10/153797] Number of member stars
+ 295-305  F11.8 ---      CSTt       [2.9/99] Astrometric SNR within
+                                     tidal radius (G1)
+ 307-311  I5    ---      Nt         [10/53464] Number of stars within
+                                     tidal radius
+ 313-324  F12.8 deg      RAdeg      Right ascension of densest point
+                                     (ICRS) at Ep=2016.0
+ 326-337  F12.8 deg      DEdeg      Declination of densest point
+                                     (ICRS) at Ep=2016.0
+ 339-350  F12.8 deg      GLON       Galactic longitude
+ 352-362  E11.4 deg      GLAT       Galactic latitude
+ 364-374  F11.8 deg      r50        Radius containing 50% of members within
+                                     the tidal radius
+ 376-386  F11.8 deg      rc         Core radius (approximate estimate)
+ 388-398  F11.8 deg      rt         Tidal radius (approximate estimate)
+ 400-410  F11.8 deg      rtot       Total radius
+                                     (including tidal tails, coma, etc)
+ 412-424  F13.8 pc       r50pc      Radius containing 50% of members in parsecs
+ 426-438  F13.8 pc       rcpc       Core radius in parsecs
+ 440-452  F13.8 pc       rtpc       Tidal radius in parsecs
+ 454-466  F13.8 pc       rtotpc     Total radius in parsecs
+ 468-480  F13.8 mas/yr   pmRA       Mean proper motion in right ascension
+                                     multipled by cos(dec)
+ 482-492  F11.8 mas/yr s_pmRA       Standard deviation of pmRA
+ 494-503  F10.8 mas/yr e_pmRA       Standard error of pmRA
+ 505-516  F12.8 mas/yr   pmDE       Mean proper motion in declination
+ 518-528  F11.8 mas/yr s_pmDE       Standard deviation of pmDE
+ 530-539  F10.8 mas/yr e_pmDE       Standard error of pmDE
+ 541-552  F12.8 mas      Plx        Mean parallax
+ 554-564  F11.8 mas    s_Plx        Standard deviation of parallax
+ 566-575  F10.8 mas    e_Plx        Standard error of parallax
+ 577-591  F15.8 pc       dist16     16th percentile of maximum likelihood
+                                     distance
+ 593-607  F15.8 pc       dist50     50th percentile of maximum likelihood
+                                     distance
+ 609-624  F16.8 pc       dist84     84th percentile of maximum likelihood
+                                     distance
+ 626-630  I5    ---      Ndist      Number of stars used for distance
+                                     calculation
+     632  I1    ---      globalPlx  [0/1] Flag indicating clusters for which a
+                                     star-by-star parallax offset correction was
+                                     not possible during distance calculation
+ 634-649  F16.8 pc       X          X coordinate in galactocentric galactic
+                                     coordinates
+ 651-666  F16.8 pc       Y          Y coordinate in galactocentric galactic
+                                     coordinates
+ 668-683  F16.8 pc       Z          Z coordinate in galactocentric galactic
+                                     coordinates
+ 685-697  F13.8 km/s     RV         ? Mean Gaia DR3 radial velocity
+ 699-711  F13.8 km/s   s_RV         ? Standard deviation of radial velocity
+ 713-725  F13.8 km/s   e_RV         ? Standard error of radial velocity
+ 727-730  I4    ---    n_RV         Number of member stars with a
+                                     radial velocity
+ 732-740  E9.4  ---      CMDCl2.5   [0/1] 2.5th percentile of CMD class
+ 742-750  E9.4  ---      CMDCl16    [0/1] 16th percentile of CMD class
+ 752-761  F10.8 ---      CMDCl50    [0/1] 50th percentile of CMD class
+ 763-772  F10.8 ---      CMDCl84    [0/1] 84th percentile of CMD class
+ 774-783  F10.8 ---      CMDCl97.5  [0/1] 97.5th percentile of CMD class
+ 785-787  A3    ---      CMDClHuman Human-assigned CMD class
+                                     (where available) (G2)
+ 789-798  F10.8 [yr]     logAge16   16th percentile of logarithm of cluster age
+ 800-809  F10.8 [yr]     logAge50   50th percentile of logarithm of cluster age
+ 811-821  F11.8 [yr]     logAge84   84th percentile of logarithm of cluster age
+ 823-831  E9.4  mag      AV16       16th percentile of V-band cluster extinction
+ 833-842  F10.8 mag      AV50       50th percentile of V-band cluster extinction
+ 844-853  F10.8 mag      AV84       84th percentile of V-band cluster extinction
+ 855-863  E9.4  mag      diffAV16   16th percentile of approximate V-band
+                                     differential extinction
+ 865-874  F10.8 mag      diffAV50   50th percentile of approximate V-band
+                                     differential extinction
+ 876-885  F10.8 mag      diffAV84   84th percentile of approximate V-band
+                                     differential extinction
+ 887-897  F11.8 mag      MOD16      16th percentile of photometrically
+                                     estimated distance modulus
+ 899-909  F11.8 mag      MOD50      50th percentile of photometrically
+                                     estimated distance modulus
+ 911-921  F11.8 mag      MOD84      84th percentile of photometrically
+                                     estimated distance modulus
+ 923-924  I2    ---      minClSize  [-1/80] HDBSCAN parameter used to construct
+                                     cluster membership list (-1 for membership
+                                     lists not made with HDBSCAN)
+     926  I1    ---      isMerged   [0/1] Flag indicating manually merged
+                                     cluster membership list
+     928  I1    ---      isGMMMemb  [0/1] Flag indicating cluster membership
+                                     list constructed using additional Gaussian
+                                     mixture model post-processing step
+ 930-931  I2    ---      NXmatches  [0/23] Number of unique crossmatches to
+                                     this cluster
+ 933-935  A3    ---      XmatchType Type of crossmatch (G3)
