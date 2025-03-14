@@ -4,11 +4,16 @@ from astropy.io import fits, ascii
 from astropy.table import Table, Column
 import numpy as np
 
+# Default values
+DEF_RP_LIMIT = 15.5
+DEF_GS_RADIUS = 10.0
+
 # The following FITS files are large and need to be downloaded from google drive:
 # https://drive.google.com/drive/folders/1wdbalWkfhOVMZ_wGg__RWaWQdhql0MbO?usp=sharing
 CATALOGUE_FILE = Path(__file__).parent / "J_A+A_673_A114_clusters.dat.gz.fits"
 MEMBERS_FILE = Path(__file__).parent / "reduced_J_A+A_673_A114_members.dat.fits"
 README_FILE = Path(__file__).parent / "Hunt23_ReadMe.txt"
+GAIA_FILE  = Path(__file__).parent / "J_A+A_673_A114_gaia_stars.dat.fits.zip"
 
 readme = ascii.read(README_FILE)
 
@@ -30,8 +35,8 @@ class Cluster():
         self.Rp_mag = self.table["Rpmag"]
 
         self.meta["GS_coverage"] = {"cluster_radius": "R50",
-                                    "gs_radius": 25,
-                                    "Rp_limit": 16,
+                                    "gs_radius": DEF_GS_RADIUS,
+                                    "Rp_limit": DEF_RP_LIMIT,
                                     }
 
     @property
@@ -131,6 +136,103 @@ class Catalogue(object):
         return self.table[item]
 
 
+class Field():
+    def __init__(self, cluster_name):
+        with fits.open(GAIA_FILE) as hdulist:
+            self.hdu = hdulist[cluster_name]
+            self.meta = dict(self.hdu.header)
+            self.table = Table([Column(self.hdu.data[colname])
+                                for colname in self.hdu.data.names],
+                               names=self.hdu.data.names)
+        
+        self.ra = self.table["ra[deg]"]
+        self.dec = self.table["dec[deg]"]
+        self.dist = self.table["dist"]
+        # override mag if no guide stars available
+        if len(self.table["source_id"]) == 1:
+            if self.table["source_id"][0] == "DR3--":
+                self.table["phot_rp_mean_mag"][0] = np.inf        
+        self.Rp_mag = self.table["phot_rp_mean_mag"]
+        self.extent = 50.0 # arcsec
+
+
+class Combined(Cluster):
+    def __init__(self, cluster_id):
+        super().__init__(cluster_id)
+        self.field = Field(self.meta["NAME"])
+
+    @property
+    def n_guide_stars(self):
+        return sum(self.field.Rp_mag <= self.meta["GS_coverage"]["Rp_limit"])
+    
+    def plot(self):
+        ra_med, dec_med = self.meta["RADEG"], self.meta["DEDEG"]
+        mask = self.field.Rp_mag < self.meta["GS_coverage"]["Rp_limit"]
+
+        # print(self.field.table[mask])
+
+        dras, ddecs = (self.field.ra - ra_med) * 3600, (self.field.dec - dec_med) * 3600
+
+        plt.scatter(dras[np.invert(mask)], ddecs[np.invert(mask)], c="k")
+        plt.scatter(dras[mask], ddecs[mask], c="r")
+
+        gs_radius = self.meta["GS_coverage"]["gs_radius"]
+        for dra, ddec in zip(dras[mask], ddecs[mask]):
+            patch = plt.Circle((dra, ddec), gs_radius, fill=True, alpha=0.3, fc="r")
+            plt.gca().add_artist(patch)
+
+        rc = plt.Circle((0, 0), self.meta["RC"] * 3600, fill=False, ec="g", ls="--")
+        r50 = plt.Circle((0, 0), self.meta["R50"] * 3600, fill=False, ec="b")
+        rt = plt.Circle((0, 0), self.meta["RT"] * 3600, fill=False, ec="orange", ls=":")
+
+        for patch in [rc, r50, rt]:
+            plt.gca().add_artist(patch)
+
+        plot_size = [-self.field.extent/2, self.field.extent/2]
+        plt.xlim(plot_size)
+        plt.ylim(plot_size)
+        gs_coverage = self.calculate_fraction_covered_by_guide_stars()
+        plt.title(f'Coverage within {self.meta["GS_coverage"]["gs_radius"]} arcsec of {self.n_guide_stars} Rp<{self.meta["GS_coverage"]["Rp_limit"]}\n'
+                  f'Guide stars within square {self.field.extent}x{self.field.extent} arcsec field:'
+                  f'{gs_coverage}')
+
+        plt.colorbar()
+        plt.show()
+
+    def calculate_fraction_covered_by_guide_stars(self):
+        """
+        Calculate the percentage of the field covered by potential guide stars
+        
+        Parameters
+        ----------
+        gs_radius : float, int
+            [arcsec] Acceptable distance to guide star. Default=25"
+
+        Returns
+        -------
+        frac_overlaps
+            min(1, sum_overlaps)
+        """
+
+        ra_med, dec_med = self.meta["RADEG"], self.meta["DEDEG"]
+
+        mask = self.field.Rp_mag < self.meta["GS_coverage"]["Rp_limit"]
+        dras = (self.field.ra[mask] - ra_med) * 3600
+        ddecs = (self.field.dec[mask] - dec_med) * 3600
+
+        gs_radius = self.meta["GS_coverage"]["gs_radius"]
+        size = self.field.extent
+
+        if size > 1024:
+            f = 512 / size
+            size *= f
+            gs_radius *= f
+
+        grid = add_circles_to_grid(int(size), dras + size/2, ddecs + size/2, gs_radius)
+        frac_overlaps = np.sum(grid) / (size**2)
+
+        return frac_overlaps
+
 def circles_fraction_overlap(circle1, circle2):
     """
     The fraction of circle1 that is covered by circle2
@@ -214,7 +316,16 @@ def add_circles_to_grid(grid_size, x_positions, y_positions, radius):
     return np.clip(grid, 0, 1)
 
 
-for i in np.linspace(1, 1766, 20):
-    cl = Cluster(int(i))
-    print(int(i), cl.n_guide_stars, cl.calculate_fraction_covered_by_guide_stars())
-    cl.plot()
+def plot_clusters():
+    for i in np.linspace(1, 1766, 20):
+        cl = Cluster(int(i))
+        print(int(i), cl.n_guide_stars, cl.calculate_fraction_covered_by_guide_stars())
+        cl.plot()
+
+def check_fields():
+    for i in np.linspace(1, 1766, 25):
+        cl = Combined(int(i))
+        print(int(i), cl.n_guide_stars, cl.calculate_fraction_covered_by_guide_stars())
+        cl.plot()
+
+check_fields()
