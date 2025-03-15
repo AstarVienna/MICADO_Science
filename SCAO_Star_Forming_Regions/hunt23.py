@@ -19,15 +19,19 @@ readme = ascii.read(README_FILE)
 
 
 class Cluster():
-    def __init__(self, cluster_id):
+    # Optionally takes hdu as input to speed up iterating through manu clusters
+    def __init__(self, cluster_id = 0, hdu = None):
         self.cluster_id = cluster_id
-        with fits.open(MEMBERS_FILE) as hdulist:
+        if not hdu:
+            hdulist = fits.open(MEMBERS_FILE)
             self.hdu = hdulist[cluster_id]
+        else:
+            self.hdu = hdu
 
-            self.meta = dict(self.hdu.header)
-            self.table = Table([Column(self.hdu.data[colname])
-                                for colname in self.hdu.data.names],
-                               names=self.hdu.data.names)
+        self.meta = dict(self.hdu.header)
+        self.table = Table([Column(self.hdu.data[colname])
+                            for colname in self.hdu.data.names],
+                            names=self.hdu.data.names)
 
         self.ra = self.table["RAdeg"]
         self.dec = self.table["DEdeg"]
@@ -137,13 +141,18 @@ class Catalogue(object):
 
 
 class Field():
-    def __init__(self, cluster_name):
-        with fits.open(GAIA_FILE) as hdulist:
+    # Optionally takes hdu as input to speed up iterating through manu clusters
+    def __init__(self, cluster_name = None, hdu = None):
+        if not hdu:
+            hdulist =  fits.open(GAIA_FILE)
             self.hdu = hdulist[cluster_name]
-            self.meta = dict(self.hdu.header)
-            self.table = Table([Column(self.hdu.data[colname])
-                                for colname in self.hdu.data.names],
-                               names=self.hdu.data.names)
+        else:
+            self.hdu = hdu
+
+        self.meta = dict(self.hdu.header)
+        self.table = Table([Column(self.hdu.data[colname])
+                            for colname in self.hdu.data.names],
+                            names=self.hdu.data.names)
         
         self.ra = self.table["ra[deg]"]
         self.dec = self.table["dec[deg]"]
@@ -157,9 +166,13 @@ class Field():
 
 
 class Combined(Cluster):
-    def __init__(self, cluster_id):
-        super().__init__(cluster_id)
-        self.field = Field(self.meta["NAME"])
+    # Optionally takes hdus as input to speed up iterating through manu clusters
+    def __init__(self, cluster_id = 0, c_hdu = None, g_hdu = None):
+        super().__init__(cluster_id, c_hdu)
+        if not g_hdu:
+            self.field = Field(self.meta["NAME"])
+        else:
+            self.field = Field(hdu=g_hdu)
 
     @property
     def n_guide_stars(self):
@@ -322,10 +335,35 @@ def plot_clusters():
         print(int(i), cl.n_guide_stars, cl.calculate_fraction_covered_by_guide_stars())
         cl.plot()
 
-def check_fields():
+def plot_fields():
     for i in np.linspace(1, 1766, 25):
         cl = Combined(int(i))
         print(int(i), cl.n_guide_stars, cl.calculate_fraction_covered_by_guide_stars())
         cl.plot()
 
-check_fields()
+# iterate through all clusters and calculate matching guide stars from GAIA field
+# NOTE: Assumes that the extensions in the MEMERS_FILE and GAIA_FILE catalogues are in the same order
+def check_all_fields():
+    with fits.open(MEMBERS_FILE) as c_hdulist:
+        with fits.open(GAIA_FILE) as g_hdulist:
+            # efficiently iterate through HDUs without loading entire list into memory
+            c_hdu_iter = iter(c_hdulist)
+            g_hdu_iter = iter(g_hdulist)
+            c_hdu = next(c_hdu_iter)    # skip primary extension
+            g_hdu = next(g_hdu_iter)    # skip primary extension
+            i = 0
+            while True:
+                c_hdu = next(c_hdu_iter, None)
+                g_hdu = next(g_hdu_iter, None)
+                i += 1
+                if not c_hdu or not g_hdu:
+                    break
+                # check that lists are consistent
+                if c_hdu.header["NAME"] != g_hdu.header["EXTNAME"]:
+                    print(f"Cluster lists do not match: {c_hdu.header["NAME"] = }, {g_hdu.header["EXTNAME"] = }")
+                    break
+                cl = Combined(c_hdu = c_hdu, g_hdu = g_hdu)
+                print(int(i), c_hdu.header["NAME"], cl.n_guide_stars, cl.calculate_fraction_covered_by_guide_stars())
+
+
+check_all_fields()
