@@ -5,8 +5,8 @@ from astropy.table import Table, Column
 import numpy as np
 
 # Default values
-DEF_RP_LIMIT = 15.5
-DEF_GS_RADIUS = 10.0
+DEF_RP_LIMIT = 16.0
+DEF_GS_RADIUS = 25.0
 
 # The following FITS files are large and need to be downloaded from google drive:
 # https://drive.google.com/drive/folders/1wdbalWkfhOVMZ_wGg__RWaWQdhql0MbO?usp=sharing
@@ -352,6 +352,7 @@ def check_all_fields():
             c_hdu = next(c_hdu_iter)    # skip primary extension
             g_hdu = next(g_hdu_iter)    # skip primary extension
             i = 0
+            print("ID Name Ra Dec NumGS Coverage")
             while True:
                 c_hdu = next(c_hdu_iter, None)
                 g_hdu = next(g_hdu_iter, None)
@@ -363,7 +364,8 @@ def check_all_fields():
                     print(f"Cluster lists do not match: {c_hdu.header["NAME"] = }, {g_hdu.header["EXTNAME"] = }")
                     break
                 cl = Combined(c_hdu = c_hdu, g_hdu = g_hdu)
-                print(int(i), c_hdu.header["NAME"], cl.n_guide_stars, cl.calculate_fraction_covered_by_guide_stars())
+                print(int(i), c_hdu.header["NAME"], cl.meta["RADEG"], cl.meta["DEDEG"], cl.n_guide_stars, cl.calculate_fraction_covered_by_guide_stars())
 
-
+# plot_clusters()
+# plot_fields()
 check_all_fields()

@@ -1,0 +1,4 @@
+Area of MICADO field covered by SCAO patches for all Hunt23 clusters:\
+Number of clusters visible to MICADO: 4991 (dec < 30 deg)
+Rp >= 16, within 25 arcsec from guide star: median coverage 77.1%
+Rp >= 15.5, within 10 arcsec from guide star: median coverage 14.2%
